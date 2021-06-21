@@ -41,15 +41,11 @@ int	expand_line(char **line, size_t add_length)
  * e.g. "world.\nThis is" --> "This is\0\0\0\0\0\0\0"
  */
 
-void	shift_buf(char *buf)
+void	shift_buf(char *buf, size_t i)
 {
-	size_t	i;
 	size_t	j;
 
-	i = 0;
 	j = 0;
-	while(buf[i] && buf[i] != '\n' && i < BUFFER_SIZE)
-		i++;
 	if (i > 0)
 	{
 		while (i < BUFFER_SIZE)
@@ -62,17 +58,17 @@ void	shift_buf(char *buf)
 /**
  * Copy contents of buffer (up to newline) to line array.
  * Call expand_line to make space in array.
- * 
+ *
  * Return: 0 error, 1 OK
  */
 
-int	buf_to_line(char *buf, char **line)
+int	copy_buf_to_line(char *buf, char **line)
 {
 	size_t	i;
 	size_t	j;
 
 	i = 0;
-	while (buf[i] != '\n' && i < BUFFER_SIZE)
+	while (buf[i] && buf[i] != '\n' && i < BUFFER_SIZE)
 		i++;
 	if (i > 0)
 	{
@@ -82,11 +78,11 @@ int	buf_to_line(char *buf, char **line)
 		j = 0;
 		while ((*line)[j])
 			j++;
-		while (buf[i] != '\n' && i < BUFFER_SIZE)
+		while (buf[i] && buf[i] != '\n' && i < BUFFER_SIZE)
 			(*line)[j++] = buf[i++];
 		(*line)[j] = 0;
 	}
-	shift_buf(buf);
+	shift_buf(buf, i);
 	return (1);
 }
 
@@ -104,20 +100,26 @@ int	buf_to_line(char *buf, char **line)
 int	get_next_line(int fd, char **line)
 {
 	static char	buf[BUFFER_SIZE];
-	size_t		i;
-	size_t		j;
+
 
 	*line = (char *)malloc(sizeof(char) * 1);
 	if (!*line)
 		return (-1);
 	(*line)[0] = 0;
 	if (buf[0])
-		buf_to_line(buf, line);
-	while (read(fd, buf, BUFFER_SIZE))
 	{
-		buf_to_line(buf, line);
+		shift_buf(buf, 1);
+		copy_buf_to_line(buf, line);
 		if (buf[0] == '\n')
 			return (1);
+	}
+	read(fd, buf, BUFFER_SIZE);
+	while (buf[0])
+	{
+		copy_buf_to_line(buf, line);
+		if (buf[0] == '\n')
+			return (1);
+		read(fd, buf, BUFFER_SIZE);
 	}
 
 	return (0);
@@ -130,5 +132,6 @@ int	main(void)
 	char	*line;
 	while (get_next_line(0, &line) > 0)
 		printf("\"%s\"\n", line);
+	printf("\"%s\"\n", line);
 	return (0);
 }
