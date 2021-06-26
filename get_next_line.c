@@ -12,6 +12,23 @@
 
 #include "get_next_line.h"
 
+size_t	ft_strlen(const char *s)
+{
+	size_t	length;
+
+	length = 0;
+	while (*s != '\0')
+	{
+		s++;
+		length++;
+	}
+	return (length);
+}
+
+/**
+ * Allocate additional memory for the 'line' variable.
+ */
+
 int	expand_line(char **line, size_t add_length)
 {
 	char	*new_line;
@@ -38,8 +55,9 @@ int	expand_line(char **line, size_t add_length)
 /**
  * Shift the content of buffer to the left.
  * Fill the rest of the buffer with nulls.
- * e.g. if i = 6,
- * "Hello World" --> "World\0\0\0\0\0\0"
+ * e.g. if start_index = 5,
+ * |0123456789|     |01234 5 6 7 8 9|
+ * "HelloWorld" --> "World\0\0\0\0\0"
  */
 
 void	shift_buf(char *buf, const size_t start_index)
@@ -60,7 +78,7 @@ void	shift_buf(char *buf, const size_t start_index)
 
 /**
  * Copy contents of buffer (up to newline) to line array.
- * Call expand_line to make space in array.
+ * Call expand_line to make space in the array.
  *
  * Return:
  * 	0: error
@@ -104,11 +122,13 @@ int	get_next_line(int fd, char **line)
 {
 	static char	buf[BUFFER_SIZE];
 
-	*line = (char *)malloc(sizeof(char) * 1);
-	if (!*line || fd < 0)
+	if (!line || fd < 0)
+		return (-1);
+	*line = (char *)malloc(1);
+	if (!*line)
 		return (-1);
 	(*line)[0] = 0;
-	if (buf[0])
+	if (buf[0] == '\n')
 	{
 		shift_buf(buf, 1);
 		if (!copy_buf_to_line(buf, line))
