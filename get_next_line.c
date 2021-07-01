@@ -12,21 +12,12 @@
 
 #include "get_next_line.h"
 
-size_t	ft_strlen(const char *s)
-{
-	size_t	length;
-
-	length = 0;
-	while (*s != '\0')
-	{
-		s++;
-		length++;
-	}
-	return (length);
-}
-
 /**
- * Allocate additional memory for the 'line' variable.
+ * Allocate more memory for the 'line' variable.
+ *
+ * RETURN:
+ * 	0: Error
+ * 	1: OK
  */
 
 int	expand_line(char **line, size_t add_length)
@@ -80,8 +71,8 @@ void	shift_buf(char *buf, const size_t start_index)
  * Copy contents of buffer (up to newline) to line array.
  * Call expand_line to make space in the array.
  *
- * Return:
- * 	0: error
+ * RETURN:
+ * 	0: Error
  * 	1: OK
  */
 
@@ -110,6 +101,42 @@ int	copy_buf_to_line(char *buf, char **line)
 }
 
 /**
+ * Read a line from buffer/fd and save it.
+ * If buf[0] is a newline, then it will first read the
+ * remaining contents of the buffer before reading from
+ * the file at fd.
+ *
+ *  * RETURN:
+ * 1 : A line has been read
+ * 0 : EOF has been reached
+ * -1 : An error happened
+ */
+
+int	read_and_copy_line(int fd, char *buf, char **line)
+{
+	if (buf[0] == '\n')
+	{
+		shift_buf(buf, 1);
+		if (!copy_buf_to_line(buf, line))
+			return (-1);
+		if (buf[0] == '\n')
+			return (1);
+	}
+	if (read(fd, buf, BUFFER_SIZE) < 0)
+		return (-1);
+	while (buf[0])
+	{
+		if (!copy_buf_to_line(buf, line))
+			return (-1);
+		if (buf[0] == '\n')
+			return (1);
+		if (read(fd, buf, BUFFER_SIZE) < 0)
+			return (-1);
+	}
+	return (0);
+}
+
+/**
  * Reads a line read from a file descriptor, without the newline.
  *
  * RETURN:
@@ -121,28 +148,19 @@ int	copy_buf_to_line(char *buf, char **line)
 int	get_next_line(int fd, char **line)
 {
 	static char	buf[BUFFER_SIZE];
+	int			ret;
 
-	if (!line || fd < 0)
+	if (!line)
 		return (-1);
 	*line = (char *)malloc(1);
 	if (!*line)
 		return (-1);
 	(*line)[0] = 0;
-	if (buf[0] == '\n')
+	ret = read_and_copy_line(fd, buf, line);
+	if (ret == -1)
 	{
-		shift_buf(buf, 1);
-		if (!copy_buf_to_line(buf, line))
-			return (-1);
-		if (buf[0] == '\n')
-			return (1);
+		free(*line);
+		*line = NULL;
 	}
-	read(fd, buf, BUFFER_SIZE);
-	while (buf[0])
-	{
-		copy_buf_to_line(buf, line);
-		if (buf[0] == '\n')
-			return (1);
-		read(fd, buf, BUFFER_SIZE);
-	}
-	return (0);
+	return (ret);
 }
