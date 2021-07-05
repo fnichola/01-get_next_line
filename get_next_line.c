@@ -60,9 +60,9 @@ void	shift_buf(char *buf, const size_t start_index)
 	j = 0;
 	if (i > 0)
 	{
-		while (i < BUFFER_SIZE)
+		while (i < BUFFER_SIZE && buf[i])
 			buf[j++] = buf[i++];
-		while (j < BUFFER_SIZE)
+		while (j < BUFFER_SIZE && buf[j])
 			buf[j++] = 0;
 	}
 }
@@ -82,7 +82,7 @@ int	copy_buf_to_line(char *buf, char **line)
 	size_t	j;
 
 	i = 0;
-	while (buf[i] && buf[i] != '\n' && i < BUFFER_SIZE)
+	while (i < BUFFER_SIZE && buf[i] && buf[i] != '\n')
 		i++;
 	if (i > 0)
 	{
@@ -92,7 +92,7 @@ int	copy_buf_to_line(char *buf, char **line)
 		j = 0;
 		while ((*line)[j])
 			j++;
-		while (buf[i] && buf[i] != '\n' && i < BUFFER_SIZE)
+		while (i < BUFFER_SIZE && buf[i] && buf[i] != '\n')
 			(*line)[j++] = buf[i++];
 		(*line)[j] = 0;
 	}
