@@ -15,6 +15,14 @@
 # include <unistd.h>
 # include <stdlib.h>
 
+# ifndef BUFFER_SIZE
+#  define BUFFER_SIZE 32
+# endif
+
+# define ERROR -1
+# define SUCCESS 1
+# define EOF 0
+
 int		get_next_line(int fd, char **line);
 size_t	ft_strlen(const char *s);
 

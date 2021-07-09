@@ -13,11 +13,7 @@
 #include "get_next_line.h"
 
 /**
- * Allocate more memory for the 'line' variable.
- *
- * RETURN:
- * 	0: Error
- * 	1: OK
+ * Allocate MORE memory for the 'line' variable.
  */
 
 int	expand_line(char **line, size_t add_length)
@@ -27,10 +23,7 @@ int	expand_line(char **line, size_t add_length)
 
 	new_line = (char *)malloc(ft_strlen(*line) + add_length + 1);
 	if (!new_line)
-	{
-		free(*line);
-		return (0);
-	}
+		return (ERROR);
 	i = 0;
 	while ((*line)[i])
 	{
@@ -40,12 +33,12 @@ int	expand_line(char **line, size_t add_length)
 	new_line[i] = 0;
 	free(*line);
 	*line = new_line;
-	return (1);
+	return (SUCCESS);
 }
 
 /**
  * Shift the content of buffer to the left.
- * Fill the rest of the buffer with nulls.
+ * Replace remaining contents with nulls.
  * e.g. if start_index = 5,
  * |0123456789|     |01234 5 6 7 8 9|
  * "HelloWorld" --> "World\0\0\0\0\0"
@@ -70,10 +63,6 @@ void	shift_buf(char *buf, const size_t start_index)
 /**
  * Copy contents of buffer (up to newline) to line array.
  * Call expand_line to make space in the array.
- *
- * RETURN:
- * 	0: Error
- * 	1: OK
  */
 
 int	copy_buf_to_line(char *buf, char **line)
@@ -86,8 +75,8 @@ int	copy_buf_to_line(char *buf, char **line)
 		i++;
 	if (i > 0)
 	{
-		if (!expand_line(line, i))
-			return (0);
+		if (expand_line(line, i) < 0)
+			return (ERROR);
 		i = 0;
 		j = 0;
 		while ((*line)[j])
@@ -97,7 +86,7 @@ int	copy_buf_to_line(char *buf, char **line)
 		(*line)[j] = 0;
 	}
 	shift_buf(buf, i);
-	return (1);
+	return (SUCCESS);
 }
 
 /**
@@ -117,23 +106,23 @@ int	read_and_copy_line(int fd, char *buf, char **line)
 	if (buf[0] == '\n')
 	{
 		shift_buf(buf, 1);
-		if (!copy_buf_to_line(buf, line))
-			return (-1);
+		if (copy_buf_to_line(buf, line) < 0)
+			return (ERROR);
 		if (buf[0] == '\n')
-			return (1);
+			return (SUCCESS);
 	}
 	if (read(fd, buf, BUFFER_SIZE) < 0)
-		return (-1);
+		return (ERROR);
 	while (buf[0])
 	{
-		if (!copy_buf_to_line(buf, line))
-			return (-1);
+		if (copy_buf_to_line(buf, line) < 0)
+			return (ERROR);
 		if (buf[0] == '\n')
-			return (1);
+			return (SUCCESS);
 		if (read(fd, buf, BUFFER_SIZE) < 0)
-			return (-1);
+			return (ERROR);
 	}
-	return (0);
+	return (EOF);
 }
 
 /**
@@ -151,11 +140,11 @@ int	get_next_line(int fd, char **line)
 	int			ret;
 
 	if (!line)
-		return (-1);
+		return (ERROR);
 	*line = (char *)malloc(1);
 	if (!*line)
-		return (-1);
-	(*line)[0] = 0;
+		return (ERROR);
+	(*line)[0] = NULL;
 	ret = read_and_copy_line(fd, buf, line);
 	if (ret == -1)
 	{
