@@ -139,12 +139,12 @@ int	get_next_line(int fd, char **line)
 	static char	buf[BUFFER_SIZE];
 	int			ret;
 
-	if (!line)
+	if (!line || !(BUFFER_SIZE))
 		return (ERROR);
 	*line = (char *)malloc(1);
 	if (!*line)
 		return (ERROR);
-	(*line)[0] = NULL;
+	(*line)[0] = 0;
 	ret = read_and_copy_line(fd, buf, line);
 	if (ret == -1)
 	{
