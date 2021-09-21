@@ -73,7 +73,7 @@ int	copy_buf_to_line(char *buf, char **line)
 	i = 0;
 	while (i < BUFFER_SIZE && buf[i] && buf[i] != '\n')
 		i++;
-	if (i > 0)
+	if (i > 0 || buf[0] == '\n')
 	{
 		if (expand_line(line, i) < 0)
 			return (ERROR);
@@ -83,6 +83,12 @@ int	copy_buf_to_line(char *buf, char **line)
 			j++;
 		while (i < BUFFER_SIZE && buf[i] && buf[i] != '\n')
 			(*line)[j++] = buf[i++];
+		if (buf[i] == '\n')
+		{
+			if (expand_line(line, 1) < 0)
+				return (ERROR);
+			(*line)[j++] = '\n';
+		}
 		(*line)[j] = 0;
 	}
 	shift_buf(buf, i);
@@ -126,30 +132,31 @@ int	read_and_copy_line(int fd, char *buf, char **line)
 }
 
 /**
- * Reads a line read from a file descriptor, without the newline.
+ * Returns a line read from a file descriptor.
  *
  * RETURN:
- * 1 : A line has been read
- * 0 : EOF has been reached
- * -1 : An error happened
+ * Read line : correct behaviour
+ * NULL : nothing else to read or an error occurred
  */
 
-int	get_next_line(int fd, char **line)
+char	*get_next_line(int fd)
 {
 	static char	buf[BUFFER_SIZE];
 	int			ret;
+	char		*line;
 
-	if (!line || !(BUFFER_SIZE))
-		return (ERROR);
-	*line = (char *)malloc(1);
-	if (!*line)
-		return (ERROR);
-	(*line)[0] = 0;
-	ret = read_and_copy_line(fd, buf, line);
-	if (ret == -1)
+	if (!BUFFER_SIZE)
+		return (NULL);
+	line = (char *)malloc(1);
+	if (!line)
+		return (NULL);
+	line[0] = 0;
+	ret = read_and_copy_line(fd, buf, &line);
+	if (ret == -1 || (ret == 0 && ft_strlen(line) == 0))
 	{
-		free(*line);
-		*line = NULL;
+		free(line);
+		line = NULL;
+		return (NULL);
 	}
-	return (ret);
+	return (line);
 }

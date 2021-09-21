@@ -23,7 +23,7 @@
 # define SUCCESS 1
 # define EOF 0
 
-int		get_next_line(int fd, char **line);
+char	*get_next_line(int fd);
 size_t	ft_strlen(const char *s);
 
 #endif
