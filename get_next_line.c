@@ -83,6 +83,7 @@ int	copy_buf_to_line(char *buf, char **line)
 			j++;
 		while (i < BUFFER_SIZE && buf[i] && buf[i] != '\n')
 			(*line)[j++] = buf[i++];
+		(*line)[j] = 0;
 		if (buf[i] == '\n')
 		{
 			if (expand_line(line, 1) < 0)
@@ -147,7 +148,7 @@ char	*get_next_line(int fd)
 
 	if (!BUFFER_SIZE)
 		return (NULL);
-	line = (char *)malloc(1);
+	line = (char *)malloc(sizeof(char));
 	if (!line)
 		return (NULL);
 	line[0] = 0;
