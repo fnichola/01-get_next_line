@@ -150,7 +150,7 @@ char	*get_next_line(int fd)
 		return (NULL);
 	line[0] = 0;
 	ret = read_and_copy_line(fd, buf, &line);
-	if (ret == -1 || (ret == 0 && ft_strlen(line) == 0))
+	if (ret == ERROR || (ret == EOF && ft_strlen(line) == 0))
 	{
 		free(line);
 		line = NULL;
