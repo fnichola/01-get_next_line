@@ -73,7 +73,9 @@ int	copy_buf_to_line(char *buf, char **line)
 	i = 0;
 	while (i < BUFFER_SIZE && buf[i] && buf[i] != '\n')
 		i++;
-	if (i > 0 || buf[0] == '\n')
+	if (i < BUFFER_SIZE && buf[i] == '\n')
+		i++;
+	if (i > 0)
 	{
 		if (expand_line(line, i) < 0)
 			return (ERROR);
@@ -83,13 +85,8 @@ int	copy_buf_to_line(char *buf, char **line)
 			j++;
 		while (i < BUFFER_SIZE && buf[i] && buf[i] != '\n')
 			(*line)[j++] = buf[i++];
-		(*line)[j] = 0;
-		if (buf[i] == '\n')
-		{
-			if (expand_line(line, 1) < 0)
-				return (ERROR);
+		if (i < BUFFER_SIZE && buf[i] == '\n')
 			(*line)[j++] = '\n';
-		}
 		(*line)[j] = 0;
 	}
 	shift_buf(buf, i);
